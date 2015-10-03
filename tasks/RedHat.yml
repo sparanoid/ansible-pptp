@@ -1,0 +1,91 @@
+---
+- name: install dependencies
+  yum: name={{ item }}
+  with_items: pptp_dependencies
+  tags: prepare
+
+# - name: get default interface
+#   debug: msg={{ ansible_default_ipv4.interface }}
+#   tags:
+#     - debug
+
+- name: init repo (i686)
+  yum: name={{ item }} state=present
+  with_items: repos_i686
+  when: ansible_distribution_version < '7' and ansible_architecture != 'x86_64'
+  tags:
+    - repo
+
+- name: init repo (x86_64)
+  yum: name={{ item }} state=present
+  with_items: repos_x86_64
+  when: ansible_distribution_version < '7' and ansible_architecture == 'x86_64'
+  tags:
+    - repo
+
+- name: install pptp
+  yum: name=pptp state=latest
+  notify: restart pptp
+  tags: install
+
+- name: tweak pptpd.conf
+  lineinfile:
+    dest: /etc/pptpd.conf
+    regexp: "^{{ item.param }}"
+    insertafter: "^# *?{{ item.param }}"
+    line: "{{ item.param }}"
+  with_items:
+    - { param: 'localip 192.168.0.1' }
+    - { param: 'remoteip 192.168.0.204-238,192.168.0.245' }
+  notify: restart pptp
+  tags:
+    - config
+
+- name: tweak options.pptpd
+  lineinfile:
+    dest: /etc/ppp/options.pptpd
+    regexp: "^{{ item.param }}"
+    insertafter: "^# *?{{ item.param }}"
+    line: "{{ item.param }}"
+  with_items:
+    - { param: 'require-mschap-v2' }
+    - { param: 'require-mppe-128' }
+    - { param: 'ms-dns 8.8.8.8' }
+    - { param: 'ms-dns 8.8.4.4' }
+  notify: restart pptp
+  tags:
+    - config
+
+- name: add users
+  lineinfile:
+    dest: /etc/ppp/chap-secrets
+    regexp: "^{{ item.user }}"
+    insertafter: "^# *?{{ item.user }}"
+    line: "{{ item.user }} pptpd {{ item.passwd }} *"
+  with_items: pptp_users
+  notify: restart pptp
+  tags:
+    - config
+
+- name: tweak sysctl
+  sysctl: name="{{ item.key }}"
+          value="{{ item.value }}"
+          state=present
+          reload=yes
+          ignoreerrors=yes
+  with_items: pptp_sysctl_params
+  when: pptp_sysctl_tweak
+  tags:
+    - sysctl
+
+- name: setup NAT
+  shell: iptables -t nat -A POSTROUTING -o {{ ansible_default_ipv4.interface }} -j MASQUERADE && iptables -t nat -n -L | grep MASQUERADE | uniq >> .ansible.sparanoid.pptp.iptables.state
+  args:
+    chdir: /tmp/
+    creates: .ansible.sparanoid.pptp.iptables.state
+  when: ansible_distribution_version < '7'
+
+- name: start and enable service
+  service: name=pptpd
+           state=started
+           enabled=yes

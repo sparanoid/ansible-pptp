@@ -1,0 +1,5 @@
+---
+pptp_dependencies:
+  - ppp
+pptp_users:
+  - { "user": "vpnuser", "passwd": "myVPN$99" }

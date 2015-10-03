@@ -1,0 +1,3 @@
+---
+- name: restart pptp
+  service: name=pptpd state=restarted

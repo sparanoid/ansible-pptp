@@ -1,0 +1,4 @@
+---
+pptp_sysctl_tweak: yes
+pptp_sysctl_params:
+  - { "key": "net.ipv4.ip_forward", "value": "1" }
