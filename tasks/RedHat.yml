@@ -4,10 +4,15 @@
   with_items: pptp_dependencies
   tags: prepare
 
-# - name: get default interface
-#   debug: msg={{ ansible_default_ipv4.interface }}
-#   tags:
-#     - debug
+- name: get default interface
+  debug: msg={{ ansible_default_ipv4.interface }}
+  tags:
+    - debug
+
+- name: get architecture
+  debug: msg={{ ansible_architecture }}
+  tags:
+    - debug
 
 - name: init repo (i686)
   yum: name={{ item }} state=present
@@ -23,9 +28,9 @@
   tags:
     - repo
 
-- name: install pptp
-  yum: name=pptp state=latest
-  notify: restart pptp
+- name: install pptpd
+  yum: name=pptpd state=latest
+  notify: restart pptpd
   tags: install
 
 - name: tweak pptpd.conf
@@ -37,7 +42,7 @@
   with_items:
     - { param: 'localip 192.168.0.1' }
     - { param: 'remoteip 192.168.0.204-238,192.168.0.245' }
-  notify: restart pptp
+  notify: restart pptpd
   tags:
     - config
 
@@ -52,7 +57,7 @@
     - { param: 'require-mppe-128' }
     - { param: 'ms-dns 8.8.8.8' }
     - { param: 'ms-dns 8.8.4.4' }
-  notify: restart pptp
+  notify: restart pptpd
   tags:
     - config
 
@@ -63,7 +68,7 @@
     insertafter: "^# *?{{ item.user }}"
     line: "{{ item.user }} pptpd {{ item.passwd }} *"
   with_items: pptp_users
-  notify: restart pptp
+  notify: restart pptpd
   tags:
     - config
 
