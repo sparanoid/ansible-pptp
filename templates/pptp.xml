@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<service>
+  <short>PPTP</short>
+  <description>PoPToP Point to Point Tunneling Server. Enable this option, if you plan to provide a PPTP VPN service.</description>
+  <port protocol="tcp" port="1723"/>
+  <port protocol="udp" port="1723"/>
+</service>

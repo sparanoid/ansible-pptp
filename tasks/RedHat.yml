@@ -90,6 +90,31 @@
     creates: .ansible.sparanoid.pptp.iptables.state
   when: ansible_distribution_version < '7'
 
+- name: sync pptp firewald service
+  template: src=pptp.xml
+            dest=/usr/lib/firewalld/services
+            owner=root
+            mode=0640
+  when: ansible_distribution_version >= '7'
+  tags:
+    - firewalld
+
+- name: enable firewalld
+  service: name=firewalld state=started enabled=yes
+  when: ansible_distribution_version >= '7'
+  tags:
+    - firewalld
+
+- name: add pptp service for firewalld
+  firewalld: zone=public
+             service=pptp
+             immediate=true
+             permanent=true
+             state=enabled
+  when: ansible_distribution_version >= '7'
+  tags:
+    - firewalld
+
 - name: start and enable service
   service: name=pptpd
            state=started
