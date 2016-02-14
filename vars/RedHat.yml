@@ -1,5 +1,0 @@
----
-repos_x86_64:
-  - "http://poptop.sourceforge.net/yum/stable/packages/pptpd-1.4.0-1.el6.x86_64.rpm"
-repos_i686:
-  - "http://poptop.sourceforge.net/yum/stable/packages/pptpd-1.4.0-1.el6.i686.rpm"
