@@ -1,6 +1,6 @@
 ---
 - name: install dependencies
-  yum: name={{ item }}
+  yum: name={{ pptp_dependencies }}
   with_items: pptp_dependencies
   tags: prepare
 
@@ -15,15 +15,13 @@
     - debug
 
 - name: init repo (i686)
-  yum: name={{ item }} state=present
-  with_items: repos_i686
+  yum: name={{ repos_i686 }} state=present
   when: ansible_distribution_version < '7' and ansible_architecture != 'x86_64'
   tags:
     - repo
 
 - name: init repo (x86_64)
-  yum: name={{ item }} state=present
-  with_items: repos_x86_64
+  yum: name={{ repos_x86_64 }} state=present
   when: ansible_distribution_version < '7' and ansible_architecture == 'x86_64'
   tags:
     - repo
